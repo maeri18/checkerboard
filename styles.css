@@ -1,0 +1,41 @@
+.noir{
+    background-color: black;
+}
+.white{
+    background-color: beige;
+}
+li{
+    width : 4vw;
+    height: 4vw;
+    float:left;
+}
+ul{
+    list-style: none;
+    clear: left;
+}
+.selected{
+    border-color:aqua;
+    border-width: 0.2vw;
+    border-style:solid;
+    box-sizing: border-box;
+
+}
+/*#damier{
+    box-sizing: border-box;
+    border-color: blue;
+    border-width: 1vw;
+}*/
+.pwhite{
+    
+    background-image: url("pwhite.png");
+    background-repeat: no-repeat;
+    background-size: 60%;
+    background-position: center;
+}
+.pnoir{
+    
+    background-image: url("pnoir.png");
+    background-repeat: no-repeat;
+    background-size: 60%;
+    background-position: center;
+}
