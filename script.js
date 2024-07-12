@@ -111,13 +111,14 @@ function string_to_board(board_string,size)
     }
 }
 
-init_damier(8);
+init_damier(10);
 
 
 move_pion([1,0],[7,7]);
 
 setTimeout(() => {
-    string_to_board(["ewewewew","wewewewe","ewewewew","eeeeeeee","eeeeeeee","bebebebe","ebebebeb","bebebebe"],8);
+    //string_to_board(["ewewewew","wewewewe","ewewewew","eeeeeeee","eeeeeeee","bebebebe","ebebebeb","bebebebe"],8);
     //console.log(damier.children[0].children[0]);
+    string_to_board(["eeeeeeeeee","eeeeeeeeee","eeeeeeeeee","beeeeeeeee","ebebeeeeee","eeweeebebe","eeeeeeeeee","eeeeeebeee","eeeeeeewee","eeeeeeeeee"],10);
 }, 2000);
     
