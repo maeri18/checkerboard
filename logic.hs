@@ -1,20 +1,32 @@
 import Data.List
+import Data.Char
 
 type Coord = (Int, Int) --position on the checkerboard
 type Checkerboard = [[Char]] --checkerboard is a list of 8 * 8 Chars. b for black pawn, B for black lady. Similarly, w for white pawn and W for white lady. empty cell is e
-size = 10
+size = 8
 --test = [['']]
 {-Valide_move takes the initial position of the pawn and the position after playing.
 It also takes the checkboard and the color of the pawn we want to move.
 The function's output is true if the move is a valid move, and false else. -}
 
+--This function checks whether the coordinate entered are within the borders of the checkerboard
 within_borders :: Coord -> Bool
 within_borders (x,y) = x >=0 && x<size && y >=0 && y < size
 
+--This function tries to access a cell and returns the content of that cell (either 'b', 'w', 'e', 'B' or 'W') if the cell is within the borders of the board or ' ' else or if the board is empty.
+      
 access_cell :: Checkerboard -> Coord -> Char
 access_cell [] _ = ' '
 access_cell xs (x,y) = if (within_borders (x,y)) then (xs!!x)!!y else ' '
 
+--This function performs a movement do not care about the movements possible to pawns or ladies in checkerboard game. It only guarantees that the targeted cell is a dark cell
+update_checkerboard :: Coord -> Coord -> Checkerboard -> Checkerboard
+update_checkerboard (x1,y1) (x2,y2) board | (lowercase_color_start == 'b' || lowercase_color_start== 'w') && color_target == 'e' = [[res|y<-[0..(size-1)], let res = if x1 == x && y1 == y then 'e' else if x == x2 && y == y2 then color_start else (access_cell board (x,y)) ]|x<-[0..(size-1)]]
+                                          | otherwise = board
+                                          where color_start =  (access_cell board (x1,y1))
+                                                lowercase_color_start = (toLower color_start)
+                                                color_target = if x2 `mod` 2 /= y2 `mod` 2 then (access_cell board (x2,y2)) else ' '  --the modulo test is to verify we indeed want to land on a black cell
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 init_board_whites_below :: Int->Checkerboard --initializes a board of size l * l, with whites below
 init_board_whites_below l | mod l 2 == 1 = error "Odd raw size to initialize the checker!!!"
                           | l <= 0 = error "Enter a positive and even raw size  !!"
@@ -31,10 +43,7 @@ valid_move_pawn_whites_below (x1,y1) (x2,y2) color xs | (xs!!x1)!!y1 /=  color =
 
 --valid_move_lady_whites_below :: Coord -> Coord -> Char -> Checkerboard -> Bool
 
-move_pawn_whites_below :: Coord -> Coord ->Char -> Checkerboard -> Checkerboard
-move_pawn_whites_below _ _ _ [] = []
-move_pawn_whites_below pos1@(x1,y1) pos2@(x2,y2) color board  | (board !!x1)!!y1 /= color = board
-                                                              |(valid_move_pawn_whites_below pos1 pos2 color board ) = [[res|y<-[0..(size-1)], let res = if x1 == x && y1 == y then 'e' else if x == x2 && y == y2 then color else (board!!x)!!y ]|x<-[0..(size-1)]]
+
 
 --move_lady_whites_below
 
@@ -188,5 +197,11 @@ searches_jumps_pawn_whites_below [] _ = []
 searches_jumps_pawn_whites_below xs pos@(x,y)|color == 'w' || color == 'b'  = (search_jumps_pawn_whites_below xs color pos []):[]
                                              |otherwise = []
                                             where color = (access_cell xs (x,y))
+**************************************************************************************************************************************8
+I probably don't need this, but it is still to be checked
 
+move_pawn_whites_below :: Coord -> Coord ->Char -> Checkerboard -> Checkerboard
+move_pawn_whites_below _ _ _ [] = []
+move_pawn_whites_below pos1@(x1,y1) pos2@(x2,y2) color board  | (board !!x1)!!y1 /= color = board
+                                                              |(valid_move_pawn_whites_below pos1 pos2 color board ) = [[res|y<-[0..(size-1)], let res = if x1 == x && y1 == y then 'e' else if x == x2 && y == y2 then color else (access_cell board (x,y)) ]|x<-[0..(size-1)]]
 -}
