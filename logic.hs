@@ -71,6 +71,7 @@ search_jumps_pawn_whites_below xs color pos@(x,y) current_jumps|(only_jumpable j
                                                              
                                                              only_jumpable ((x1,y1),(ex,ey)) | cannot_jump color (access_cell xs (x1,y1)) = (0,0)
                                                                                              | (access_cell xs (ex,ey)) /= 'e' = (0,0)
+                                                                                             | elem (ex,ey) current_jumps = (0,0)
                                                                                              | otherwise = (ex,ey)
 
 --To separate the output of search_jumps_pawn_whites_below into series of jumps [[Coord]]
@@ -87,7 +88,11 @@ longest_jumps xs = [x|x<-separated_list, (length x) == max_length]
                        max_length = maximum (map length separated_list)
                        
 
+-----Functions to handle the white player's round and black player's round. It takes both the first 
+--player_white_whites_below :: Coord -> Coord -> Checkerboard -> Checkerboard
 
+ 
+--player_black_whites_below ::
 
 ----------------Blacks below
 init_board_blacks_below :: Int->Checkerboard --initializes a board of size l * l, with blacks below
