@@ -99,12 +99,13 @@ longest_jumps xs = [x|x<-separated_list, (length x) == max_length]
 
 -----Functions to handle the white player's round and black player's round. It takes both the initial an target position, and the checkboard. 
 
-player_pawn_whites_below :: Coord -> Coord -> Checkerboard -> Checkerboard
-player_pawn_whites_below pos0@(x1,y1) pos1@(x2,y2) board |(color /='w' || color /= 'b') = board              --this function works if and only if at the first position (pos0) is a white cell
-                                                              |possible_jumps /= [] = if or (map (elem pos1) possible_jumps) then (update_checkerboard pos0 pos1 board) else board
-                                                              |(valid_move_pawn_whites_below pos0 pos1 color board) = (update_checkerboard pos0 pos1 board) 
-                                                              where possible_jumps = (jump_pawn_possible_whites_below board pos0) 
-                                                                    color = (access_cell board pos0)
+player_pawn_whites_below :: Coord -> Coord -> Char -> Checkerboard -> Checkerboard
+player_pawn_whites_below pos0@(x1,y1) pos1@(x2,y2) expected_color board |(color /= expected_color) = board              --this function works if and only if at the first position (pos0) is of the correct color
+                                                                        |(possible_jumps /= []) && (or (map (((==) pos1).last) possible_jumps)) = (update_checkerboard pos0 pos1 board) 
+                                                                        |(possible_jumps == [[pos0]]) && (valid_move_pawn_whites_below pos0 pos1 color board) = (update_checkerboard pos0 pos1 board) 
+                                                                        |otherwise = board
+                                                                        where possible_jumps = (jump_pawn_possible_whites_below board pos0) 
+                                                                              color = (access_cell board pos0)
 
 -- *******************************************************************************************************************************************************************************************************************************************
 
@@ -143,30 +144,33 @@ jump_lady
 -}
 {-This function outputs 'w' if whites won, 'b' if blacks won, 'd' if it's a draw, 'e' if no one won yet (empty) and ' ' if the board is somehow empty-}
 --to upgrade
-win :: board -> Char 
+win :: Checkerboard -> Char 
 win [] = ' ' 
 win board = 'e'
 
+round_whites_below :: Checkerboard -> Char -> IO Checkerboard
+round_whites_below [] _ = error "empty Checkerboard"
+round_whites_below board color = do putStrLn $ (char_to_colors_names color)++" play! Enter the coordinate of the pawn you want to move. Then enter the target destination."
+                                    input_0 <- getLine
+                                    let pos0 = (read input_0) :: (Int,Int)
+                                    input_1 <- getLine
+                                    let pos_target = (read input_1) :: (Int,Int)
+                                    let new_board = (player_pawn_whites_below pos0 pos_target color board)
+                                    if new_board == board then do putStrLn "Can't do such a move"
+                                                                  round_whites_below board color
+                                                          else do
+                                                                  print_board new_board
+                                                                  return new_board
 play :: Checkerboard -> IO ()
 play board = do
-               putStrLn "Enter the coordinate of the pawn you want to move. Then enter the target destination."
-               input_whites_0 <- getLine
-               let pos0_whites = (read input_whites_0) :: (Int,Int)
-               input_whites_1 <- getLine
-               let target_whites = (read input_whites_1) :: (Int,Int)
-               let new_board_1 = player_pawn_whites_below pos0_whites target_whites board
-               if (win new_board == 'w') then do putStrLn "whites won!!"
-                                                 return ()
-                                          else do 
-                                                 putStrLn "Now blacks, play!!"
-                                                 input_blacks_0 <- getLine
-                                                 let pos0_blacks = (read input_whites_0) :: (Int,Int)
-                                                 input_blacks_1 <- getLine
-                                                 let target_blacks = (read input_whites_1) :: (Int,Int)
-                                                 let new_board_2 = player_pawn_whites_below pos0_blacks target_blacks new_board_1 
-                                                 if (win new_board == 'b') then do putStrLn "Blacks won !!!"
-                                                                                   return ()
-                                                                           else play
+               new_board_1 <- round_whites_below board 'w'
+               if (win new_board_1 == 'w') then do putStrLn "whites won!!"
+                                                   return ()
+                                           else do 
+                                                  new_board_2 <- round_whites_below new_board_1 'b'
+                                                  if (win new_board_2 == 'b') then do putStrLn "Blacks won !!!"
+                                                                                      return ()
+                                                                              else (play new_board_2)
 
                                                 
                
@@ -175,6 +179,7 @@ play board = do
 main :: IO ()
 main = do 
          let board = init_board_whites_below size
+         (print_board board)
          putStrLn "You are the white player...So you start!!"
          play board
          
@@ -185,7 +190,14 @@ print_board [] = putStr "\n"
 print_board (x:xs) = do putStrLn (intersperse ' ' x) 
                         print_board xs
 
-
+-- used to match characters 'w', 'e', 'b' .... to their respective meanings.
+char_to_colors_names :: Char -> String
+char_to_colors_names 'w' = "whites"
+char_to_colors_names 'b' = "blacks"
+char_to_colors_names 'e' = "empty"
+char_to_colors_names ' ' = "error occured"
+char_to_colors_names 'W' = "White lady"
+char_to_colors_names 'B' = "Black lady"
 
 {- 
 *****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
