@@ -96,7 +96,11 @@ longest_jumps xs = [x|x<-separated_list, (length x) == max_length]
                        separated_list = (separate_jump_series xs pos0 [] [])
                        max_length = maximum (map length separated_list)
                        
-
+--Function to actualy perform the jump. This function assumes that all tests have been made and that there exists a maximal jump from the intial to the target position
+{-perform_jump_pawn_whites_below :: Checkerboard -> Coord -> Coord -> [[Coord]] -> Checkerboard
+perform_jump [] _ _ _ = error "empty board!"
+perform_jump board _ _ [] = board
+perform_jump board pos0@(x1,y1) pos1@(x2,y2) xs = -}
 -----Functions to handle the white player's round and black player's round. It takes both the initial an target position, and the checkboard. 
 
 player_pawn_whites_below :: Coord -> Coord -> Char -> Checkerboard -> Checkerboard
