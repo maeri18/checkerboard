@@ -27,7 +27,7 @@ update_checkerboard (x1,y1) (x2,y2) board | (lowercase_color_start == 'b' || low
                                                 lowercase_color_start = (toLower color_start)
                                                 color_target = if x2 `mod` 2 /= y2 `mod` 2 then (access_cell board (x2,y2)) else ' '  --the modulo test is to verify we indeed want to land on a black cell
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-init_board_whites_below :: Int->Checkerboard --initializes a board of size l * l, with whites below
+init_board_whites_below :: Int -> Checkerboard --initializes a board of size l * l, with whites below
 init_board_whites_below l | mod l 2 == 1 = error "Odd raw size to initialize the checker!!!"
                           | l <= 0 = error "Enter a positive and even raw size  !!"
                           |otherwise = [[cell|y<-[0..l-1], let cell = if x == (div l 2) || x == (div l 2) - 1 then 'e' else if  x < (div l 2) && (((mod x 2)==0 && (mod y 2)==1) || ((mod x 2) == 1 && (mod y 2) == 0)) then 'b' else if x >= (div l 2) && (((mod x 2)==0 && (mod y 2)==1) || ((mod x 2) == 1 && (mod y 2) == 0)) then 'w' else  'e' ]|x<-[0..l-1]]
@@ -97,11 +97,16 @@ longest_jumps xs = [x|x<-separated_list, (length x) == max_length]
                        max_length = maximum (map length separated_list)
                        
 
------Functions to handle the white player's round and black player's round. It takes both the first 
---player_white_whites_below :: Coord -> Coord -> Checkerboard -> Checkerboard
+-----Functions to handle the white player's round and black player's round. It takes both the initial an target position, and the checkboard. 
 
- 
---player_black_whites_below ::
+player_pawn_whites_below :: Coord -> Coord -> Checkerboard -> Checkerboard
+player_pawn_whites_below pos0@(x1,y1) pos1@(x2,y2) board |(color /='w' || color /= 'b') = board              --this function works if and only if at the first position (pos0) is a white cell
+                                                              |possible_jumps /= [] = if or (map (elem pos1) possible_jumps) then (update_checkerboard pos0 pos1 board) else board
+                                                              |(valid_move_pawn_whites_below pos0 pos1 color board) = (update_checkerboard pos0 pos1 board) 
+                                                              where possible_jumps = (jump_pawn_possible_whites_below board pos0) 
+                                                                    color = (access_cell board pos0)
+
+-- *******************************************************************************************************************************************************************************************************************************************
 
 ----------------Blacks below
 init_board_blacks_below :: Int->Checkerboard --initializes a board of size l * l, with blacks below
@@ -129,13 +134,51 @@ move_pawn_blacks_below pos1@(x1,y1) pos2@(x2,y2) color board  | (board !!x1)!!y1
 
 -- player_black
 
-win
+
 
 
 
 jump_lady
 
-play-}
+-}
+{-This function outputs 'w' if whites won, 'b' if blacks won, 'd' if it's a draw, 'e' if no one won yet (empty) and ' ' if the board is somehow empty-}
+--to upgrade
+win :: board -> Char 
+win [] = ' ' 
+win board = 'e'
+
+play :: Checkerboard -> IO ()
+play board = do
+               putStrLn "Enter the coordinate of the pawn you want to move. Then enter the target destination."
+               input_whites_0 <- getLine
+               let pos0_whites = (read input_whites_0) :: (Int,Int)
+               input_whites_1 <- getLine
+               let target_whites = (read input_whites_1) :: (Int,Int)
+               let new_board_1 = player_pawn_whites_below pos0_whites target_whites board
+               if (win new_board == 'w') then do putStrLn "whites won!!"
+                                                 return ()
+                                          else do 
+                                                 putStrLn "Now blacks, play!!"
+                                                 input_blacks_0 <- getLine
+                                                 let pos0_blacks = (read input_whites_0) :: (Int,Int)
+                                                 input_blacks_1 <- getLine
+                                                 let target_blacks = (read input_whites_1) :: (Int,Int)
+                                                 let new_board_2 = player_pawn_whites_below pos0_blacks target_blacks new_board_1 
+                                                 if (win new_board == 'b') then do putStrLn "Blacks won !!!"
+                                                                                   return ()
+                                                                           else play
+
+                                                
+               
+
+
+main :: IO ()
+main = do 
+         let board = init_board_whites_below size
+         putStrLn "You are the white player...So you start!!"
+         play board
+         
+
 
 print_board :: Checkerboard -> IO ()
 print_board [] = putStr "\n"
