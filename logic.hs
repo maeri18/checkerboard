@@ -2,8 +2,9 @@ import Data.List
 import Data.Char
 
 type Coord = (Int, Int) --position on the checkerboard
-type Checkerboard = [[Char]] --checkerboard is a list of 8 * 8 Chars. b for black pawn, B for black lady. Similarly, w for white pawn and W for white lady. empty cell is e
+type Checkerboard = [[Char]] --checkerboard is a list of 8 * 8 Chars (because size = 8). b for black pawn, B for black lady. Similarly, w for white pawn and W for white lady. empty cell is e
 size = 8
+
 --test = [['']]
 {-Valide_move takes the initial position of the pawn and the position after playing.
 It also takes the checkboard and the color of the pawn we want to move.
@@ -13,7 +14,7 @@ The function's output is true if the move is a valid move, and false else. -}
 within_borders :: Coord -> Bool
 within_borders (x,y) = x >=0 && x<size && y >=0 && y < size
 
---This function tries to access a cell and returns the content of that cell (either 'b', 'w', 'e', 'B' or 'W') if the cell is within the borders of the board or ' ' else or if the board is empty.
+--This function tries to access a cell and returns the content of that cell (either 'b', 'w', 'e', 'B' or 'W') if the cell is within the borders of the board. Else it returns ' '  (for example if the board is empty).
       
 access_cell :: Checkerboard -> Coord -> Char
 access_cell [] _ = ' '
@@ -21,11 +22,12 @@ access_cell xs (x,y) = if (within_borders (x,y)) then (xs!!x)!!y else ' '
 
 --This function performs a movement do not care about the movements possible to pawns or ladies in checkerboard game. It only guarantees that the targeted cell is a dark cell
 update_checkerboard :: Coord -> Coord -> Checkerboard -> Checkerboard
-update_checkerboard (x1,y1) (x2,y2) board | (lowercase_color_start == 'b' || lowercase_color_start== 'w') && color_target == 'e' = [[res|y<-[0..(size-1)], let res = if x1 == x && y1 == y then 'e' else if x == x2 && y == y2 then color_start else (access_cell board (x,y)) ]|x<-[0..(size-1)]]
+update_checkerboard (x1,y1) (x2,y2) board | (lowercase_color_start == 'b' || lowercase_color_start == 'w') && color_target == 'e' = [[res|y<-[0..(size-1)], let res = if x1 == x && y1 == y then 'e' else if x == x2 && y == y2 then color_start else (access_cell board (x,y)) ]|x<-[0..(size-1)]]
                                           | otherwise = board
                                           where color_start =  (access_cell board (x1,y1))
                                                 lowercase_color_start = (toLower color_start)
-                                                color_target = if x2 `mod` 2 /= y2 `mod` 2 then (access_cell board (x2,y2)) else ' '  --the modulo test is to verify we indeed want to land on a black cell
+                                                color_target = if x2 `mod` 2 /= y2 `mod` 2 then (access_cell board (x2,y2)) else ' '  --the modulo test is to verify we indeed land on a black cell
+
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 init_board_whites_below :: Int -> Checkerboard --initializes a board of size l * l, with whites below
 init_board_whites_below l | mod l 2 == 1 = error "Odd raw size to initialize the checker!!!"
@@ -110,6 +112,9 @@ player_pawn_whites_below pos0@(x1,y1) pos1@(x2,y2) expected_color board |(color 
                                                                         |otherwise = board
                                                                         where possible_jumps = (jump_pawn_possible_whites_below board pos0) 
                                                                               color = (access_cell board pos0)
+--white_round_whites_below
+
+--black_round_whites_below
 
 -- *******************************************************************************************************************************************************************************************************************************************
 
