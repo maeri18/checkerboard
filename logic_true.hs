@@ -11,6 +11,11 @@ It also takes the checkboard and the color of the pawn we want to move.
 The function's output is true if the move is a valid move, and false else. -}
 
 -- Whites below
+{-This function initializes a board of size l * l, whites pawns below black -}
+init_board_whites_below :: Int -> Checkerboard 
+init_board_whites_below l | mod l 2 == 1 = error "Odd raw size to initialize the checker!!!"
+                          | l <= 0 = error "Enter a positive and even raw size  !!"
+                          | otherwise = [[ cell|y<-[0..l-1], let cell = if x == (div l 2) || x == (div l 2) - 1 then 'e' else if  x < (div l 2) && (((mod x 2)==0 && (mod y 2)==1) || ((mod x 2) == 1 && (mod y 2) == 0)) then 'b' else if x >= (div l 2) && (((mod x 2)==0 && (mod y 2)==1) || ((mod x 2) == 1 && (mod y 2) == 0)) then 'w' else  'e' ]|x<-[0..l-1]]
 
 {-This function checks whether the coordinate entered are within the borders of the checkerboard-}
 within_borders :: Coord -> Bool
@@ -47,15 +52,15 @@ check_cell_contain board pos@(x,y) c = ((access_cell board pos) == c)
     * Ladies can skip any number of cells, even if not jumping an adversary pawn
     * In case of possible jumping, the longest (or one of the longest) jump is mandatory to be taken
     * The board should not be an empty list-}
-valid_move :: Checkerboard -> Coord -> Coord -> Bool
+{-valid_move :: Checkerboard -> Coord -> Coord -> Bool
 valid_move [] _ _ _ = False
 valid_move board pos_init@(xi,yi) pos_target@(xt,yt) |cell_init == 'e' || cell_target \= 'e' || cell_init == ' ' || cell_target == ' '  = False --checks first three validity conditions above
-                                                           |((odd xi) && (odd yi)) || ((even xi) && (even yi)) = error "Somehow the initial position of the pawn to move is not a black cell"
-                                                           |((odd xt) && (odd yt)) || ((even xt) && (even yt)) = False
-                                                           |(jumping_possible board cell_init) =
-                                                           |not (jumping_possible board cell_init) = elem pos_target (possible_positions board pos_init)
+                                                     |((odd xi) && (odd yi)) || ((even xi) && (even yi)) = error "Somehow the initial position of the pawn to move is not a black cell"
+                                                     |((odd xt) && (odd yt)) || ((even xt) && (even yt)) = False
+                                                     |(jump_possible board cell_init) =
+                                                     |not(jump_possible board cell_init) = elem pos_target (possible_positions board pos_init)
                                             where cell_init = (access_cell board pos_init)
-                                                  cell_target = (access_cell board pos_target)
+                                                  cell_target = (access_cell board pos_target)-}
 
 {-Function to return the list of possible positions where a pawn/lady could land given that no jumping is possible.
 Takes as argument the board and the position of the pawn
@@ -66,42 +71,44 @@ possible_positions board pos@(x,y)| cell_init == 'B' || cell_init == 'W' = diago
                                   | cell_init == 'b' || cell_init == 'w' = first_level_diagonales
                                   | otherwise = [] --in case the cell is empty or out of the board
                                   where cell_init = (access_cell board pos)
-                                       diagonales = [ res|i<-[1..size], let res = (x+i,y+i), (within_borders res)] ++ [ res|i<-[1..size], let res = (x-i,y+i), (within_borders res)] ++ [ res|i<-[1..size], let res = (x-i,y-i), (within_borders res)] ++ [ res|i<-[1..size], let res = (x+i,y-i), (within_borders res)]
-                                       first_level_diagonales = [(x+1,y+1),(x-1,y+1),(x+1,y-1),(x-1,y-1)]
+                                        diagonales = [ res|i<-[1..size], let res = (x+i,y+i), (within_borders res)] ++ [ res|i<-[1..size], let res = (x-i,y+i), (within_borders res)] ++ [ res|i<-[1..size], let res = (x-i,y-i), (within_borders res)] ++ [ res|i<-[1..size], let res = (x+i,y-i), (within_borders res)]
+                                        first_level_diagonales = [ pos_possible|pos_possible<-[(x+1,y+1),(x-1,y+1),(x+1,y-1),(x-1,y-1)], (within_borders pos_possible)]
 
 {-Function to decide whether or not a jump movement is possible for the pawn/lady in a cell
 Returns True if the jump is possible, and False else-}
 jump_possible :: Checkerboard -> Coord -> Bool
-jump_possible [] _ = []
+jump_possible [] _ = False
 jump_possible board pos@(x,y)| null possible_landings  = False
                              | otherwise = (exist_jumpable_cell possible_landings)
                              where cell_init = (access_cell board pos)
                                    possible_landings = (possible_positions board pos)
                                    exist_jumpable_cell xs | xs == [] = False
-                                                           | let cell = (access_cell board (head xs)) in (cell /= 'e' && cell /= ' ' && (access_cell board (cell_behind_potentially_jumpable_cell pos cell))) == 'e' = True
-                                                           | otherwise = (exist_non_empty_cell (tail xs))
+                                                          | let cell = (access_cell board (head xs)) in (cell /= 'e' && cell /= ' ' && (access_cell board (cell_behind_potentially_jumpable_cell pos (head xs))) == 'e') = True
+                                                          | otherwise = (exist_jumpable_cell (tail xs))
                                    
 {-Utilitary function to determine the cell 'behind' an occupied cell with respect to the cell that jump
 This function helps to calculate the coordinates of the cell behind the jumpable cell, so that the pawn/lady at position pos can jump
 if the cell behind is empty.-}
+cell_behind_potentially_jumpable_cell::Coord -> Coord -> Coord
 cell_behind_potentially_jumpable_cell pos@(x,y) jump_cell@(xj,yj) | x > xj && y > yj = (xj-1,yj-1)
                                                       | x < xj && y > yj = (xj+1,yj-1)
                                                       | x > xj && y < yj = (xj-1,yj+1)
                                                       | x < xj && y < yj = (xj+1,yj+1)                                 
 
 {-Function to determine the longest jump possible given the board and a position.-}
-{-longest_jumps :: Checkerboard -> Coord -> [[Coord]]
-longest_jumps [] _ = []
-longest_jumps board pos@(x,y) | null possible_landings  = []
-                              | 
-
+longest_jumps :: Checkerboard -> Coord -> [Coord] -> Char -> [Coord]
+longest_jumps [] _ _ _ = []
+longest_jumps _ _ [] _ = []
+longest_jumps board (pos@(x,y)) current_paths color | null jumpable_cells = []
+                                                    | otherwise = explore_paths jumpable_cells
 
                                where cell_init = (access_cell board pos)
                                      possible_landings = (possible_positions board pos)
-                                     non_empty_cells = [ cell|(i,j)<-possible_landings, let cell = (access_cell board (xt,yt), cell \= 'e' && cell \=' ')] -- gathering cell among the possible landing cells that is not empty
-                                    
-                                     jumpable_cells = [(i,j)|(i,j)<-non_empty_cells, (access_cell board (cell_behind_potentially_jumpable_cell (i,j))) == 'e']
--}
+                                     non_empty_cells = [ (i,j)|(i,j)<-possible_landings, let cell = (access_cell board (i,j)), cell /= 'e' && cell /=' '] -- gathering all cells among the possible landing cells that are not empty 
+                                     jumpable_cells = [ (i,j)|(i,j)<-non_empty_cells, (access_cell board (cell_behind_potentially_jumpable_cell pos (i,j))) == 'e' && ((toLower (access_cell board (i,j))) /= (toLower color)) ]
+                                     explore_paths [] = []
+                                     explore_paths (new_pos:xs) = (longest_jumps board new_pos (new_pos:current_paths) color) ++ (explore_paths xs)
+
 {-Function to update the checkerboard after verifying that the move is valid-}
 
 -- black below
